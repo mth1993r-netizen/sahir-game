@@ -1,8 +1,11 @@
+
 name: Build APK
 on:
   workflow_dispatch:
   push:
-    paths: ['SahirApp.zip']
+    paths:
+      - '103.zip'
+      - 'SahirApp.zip'
 permissions:
   contents: write
 jobs:
@@ -13,15 +16,24 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.7"
-      - run: unzip -q SahirApp.zip
-      - run: cd SahirApp && gradle assembleDebug
-      - env:
+          gradle-version: '8.7'
+      - name: Extract project
+        run: |
+          if [ -f 103.zip ]; then
+            unzip -q 103.zip
+          else
+            unzip -q SahirApp.zip
+          fi
+      - name: Build APK
+        run: cd SahirApp && gradle assembleDebug
+      - name: Publish APK
+        env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create v${{ github.run_number }} \
             SahirApp/app/build/outputs/apk/debug/app-debug.apk \
-            --title "ساحر اللانهاية v${{ github.run_number }}" --notes "APK"
+            --title "ساحر اللانهاية v${{ github.run_number }}" \
+            --notes "Built from uploaded project."
